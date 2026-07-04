@@ -24,8 +24,10 @@ Runtime: kind single-node cluster on a CPU-only Mac. Focus area: pipelines & orc
 3. **Before writing manifests for a stage, fetch the relevant official docs live**
    (k8s.io, kubeflow.org, argo-workflows, mlflow.org, kserve.github.io, vllm).
    Do not rely on memorized API versions or install commands — they drift.
-4. Fill in that stage's `README.md` (objectives, concepts, commands, expected output, "try next"),
-   write manifests under `manifests/`, code under `src/`.
+4. Fill in that stage's `concepts.md` (the "textbook chapter": definitions, mental
+   models, why things exist, diagrams-in-text) AND `README.md` (the "lab guide":
+   objectives, commands, expected output, "try next"). Write manifests under
+   `manifests/`, code under `src/`. The user reads concepts.md first, then runs README.md.
 5. Have the user run the commands; explain outputs; troubleshoot.
 6. When the stage is done:
    - Tick its box in `CURRICULUM.md` → "Progress".
