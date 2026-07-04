@@ -1,86 +1,136 @@
 # 00 — Bootstrap: cluster baseline used by every stage
 
-One-time setup so later stages can assume a working kind cluster with ingress and a few convenience helpers.
+One-time setup so later stages can assume a working kind cluster with native Ingress
+and a couple of convenience helpers.
+
+> **Architecture (kind v0.32+, July 2026):** kind now supports Ingress and LoadBalancer
+> services natively via `cloud-provider-kind` — a standalone host binary that runs
+> Docker containers as load balancers. **No ingress-nginx install is needed.**
+> This replaces the old `extraPortMappings` + ingress-nginx pattern.
 
 ## Objectives
 
-- Confirm the kind cluster is healthy.
-- Install ingress-nginx (used by stages 05, 09, 12, 15 for HTTP access instead of `port-forward`).
-- Pin a couple of helper aliases / scripts used across stages.
+- Install `cloud-provider-kind` (one-time, on the host).
+- Recreate the kind cluster with the bootstrap config.
+- Start `cloud-provider-kind` so Ingress and LoadBalancer services work.
+- Verify with a sample Ingress object.
+- Add a few shell aliases.
 
-## 1. Verify cluster
-
-```bash
-kubectl get nodes
-kubectl get pods -A
-```
-
-You should see `kind-control-plane` Ready and coredns / local-path-provisioner running in `kube-system`.
-
-## 2. Install ingress-nginx
-
-kind needs a specific ingress-nginx config to work with its port-mapped control-plane. Apply the manifest here:
+## 1. Install cloud-provider-kind (one-time)
 
 ```bash
-kubectl apply -f manifests/ingress-nginx.yaml
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=120s
+go install sigs.k8s.io/cloud-provider-kind@v0.11.1
 ```
 
-Verify the controller is up:
+Binary lands at `$(go env GOPATH)/bin/cloud-provider-kind`.
 
-```bash
-kubectl get pods -n ingress-nginx
-```
-
-### Reaching ingress from the host
-
-kind maps ports 80/443 of the control-plane container to the host. To confirm:
-
-```bash
-docker port kind-control-plane
-```
-
-You should see `80/tcp -> 0.0.0.0:80` (and 443). If not, see the Troubleshooting section — your cluster was created without port mappings and you'll need to recreate it with the bootstrap config in `manifests/kind-config.yaml`.
-
-## 3. (Optional) Recreate cluster with the bootstrap config
-
-Only if `docker port kind-control-plane` did **not** show 80/443 mappings:
+## 2. Recreate the cluster with the bootstrap config
 
 ```bash
 kind delete cluster
-kind create cluster --config manifests/kind-config.yaml
-kubectl apply -f manifests/ingress-nginx.yaml
+kind create cluster --config manifests/kind-config.yaml --wait 60s
+kubectl get nodes
 ```
 
-The bootstrap config bumps the node memory to 8 GiB and explicitly maps 80/443/8080 to the host. The larger memory budget matters once we install Kubeflow Pipelines in stage 07.
+You should see `kind-control-plane` Ready. The config is a single control-plane node
+on `kindest/node:v1.36.1` with the `ingress-ready=true` node label (kept for compatibility
+with older guides — cloud-provider-kind does not actually require it).
 
-## 4. Convenience aliases (optional, recommended)
+> Later (stage 07, KFP) we may bump node memory by switching to a different config;
+> that config lives in `07-kubeflow-pipelines/manifests/`. Don't pre-emptively add
+> memory limits here — the current config is the cleanest baseline.
 
-Add to your shell:
+## 3. Start cloud-provider-kind (every session)
+
+`cloud-provider-kind` is a host process, not a pod. It must run with `sudo` because it
+opens host ports for the LB containers. Open a **dedicated terminal** and run:
+
+```bash
+sudo "$(go env GOPATH)/bin/cloud-provider-kind" --enable-default-ingress=true
+```
+
+Leave that terminal open while you work on the cluster. You should see log lines like:
+
+```
+I0704 ... app.go:90] FLAG: --enable-default-ingress="true"
+... starting controller
+```
+
+If you see `Error: please run this again with sudo`, you forgot `sudo`.
+
+> **Gotcha:** If you reboot your Mac or close that terminal, Ingress/LB services will
+> stop getting external IPs. Just restart the binary. The cluster itself is unaffected.
+
+## 4. Verify native Ingress works
+
+Apply the official kind ingress example (two http-echo pods + an Ingress):
+
+```bash
+kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/usage.yaml
+```
+
+Wait for the Ingress to get an ADDRESS (cloud-provider-kind assigns it):
+
+```bash
+kubectl get ingress
+# NAME              CLASS     HOSTS         ADDRESS        PORTS   AGE
+# example-ingress   <none>    example.com   172.18.0.N     80      10m
+```
+
+Curl it (the ADDRESS is a Docker bridge IP reachable from your Mac):
+
+```bash
+INGRESS_IP=$(kubectl get ingress example-ingress -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl -H "Host: example.com" http://${INGRESS_IP}/foo   # -> "foo-app"
+curl -H "Host: example.com" http://${INGRESS_IP}/bar   # -> "bar-app"
+```
+
+If those return the pod hostnames, native Ingress is working. Clean up:
+
+```bash
+kubectl delete -f https://kind.sigs.k8s.io/examples/ingress/usage.yaml
+```
+
+## 5. Verify LoadBalancer services work
+
+```bash
+kubectl apply -f https://kind.sigs.k8s.io/examples/loadbalancer/usage.yaml
+LB_IP=$(kubectl get svc/foo-service -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+curl ${LB_IP}:5678   # -> "foo-app" or "bar-app" (round robin)
+kubectl delete -f https://kind.sigs.k8s.io/examples/loadbalancer/usage.yaml
+```
+
+## 6. Convenience aliases (optional, recommended)
+
+Add to your `~/.zshrc`:
 
 ```bash
 alias k=kubectl
 alias kgp='kubectl get pods -A'
 alias kgs='kubectl get svc -A'
+alias kgi='kubectl get ingress -A'
 alias kdesc='kubectl describe'
 alias kl='kubectl logs -f'
 ```
 
-## 5. What "done" looks like
+## 7. What "done" looks like
 
-- `kubectl get nodes` → 1 Ready node
-- `kubectl get pods -n ingress-nginx` → controller Ready
-- `curl http://localhost` from the host → 404 from nginx (expected: no Ingress objects yet)
+- `kubectl get nodes` → 1 Ready node (`kind-control-plane`)
+- `cloud-provider-kind` running in a terminal (with sudo)
+- `kubectl get ingress` shows an ADDRESS (not `<pending>`) after applying an Ingress
+- `curl` of the Ingress IP returns the expected pod response
 
 ## Try next
 
-`../01-k8s-fundamentals/` — Pod, Deployment, Service basics, validated against this bootstrapped cluster.
+`../01-k8s-fundamentals/` — Pod, Deployment, Service basics, validated against this
+bootstrapped cluster. From now on you can use real Ingress objects (not just port-forward)
+to reach apps.
 
 ## Troubleshooting
 
-- **No port mapping on the control-plane:** cluster was created without `extraPortMappings`. Recreate with `manifests/kind-config.yaml`.
-- **ingress-nginx pending:** check events with `kubectl describe pod -n ingress-nginx <pod>`; usually a missing port mapping, not a resource issue.
-- **Mac DNS for ingress hostnames:** add entries to `/etc/hosts` (e.g. `127.0.0.1 mlflow.local`) when stages use named Ingress hosts.
+- **`Error: please run this again with sudo`** — cloud-provider-kind needs root for host port binding.
+- **Ingress ADDRESS stuck on `<pending>`** — cloud-provider-kind is not running. Check the dedicated terminal.
+- **LoadBalancer service `<pending>`** — same cause; restart the binary.
+- **`curl` to the ingress IP times out** — the Docker bridge IP changes between cluster recreations. Re-fetch it with `kubectl get ingress`.
+- **Mac DNS for named Ingress hosts** — add entries to `/etc/hosts` (e.g. `172.18.0.N mlflow.local`). The IP is the one shown by `kubectl get ingress`. For stages that use named hosts (09, 12, 15), I'll show you how.
+- **Old nginx test pods from the previous cluster are gone** — that's expected; we deleted the 12-day-old cluster.

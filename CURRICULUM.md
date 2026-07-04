@@ -13,9 +13,9 @@ plus `manifests/` and `src/` you run yourself.
 
 - **Active stage:** none yet (curriculum just scaffolded)
 - **Last completed:** 00-existing-flask-baseline (snapshot only, not a teaching stage)
-- **Next up:** 00-bootstrap — verify cluster, install ingress-nginx
+- **Next up:** 01-k8s-fundamentals — Pods, ReplicaSets, Deployments, Services, Labels (bootstrap done)
 - **Blockers / open questions:** none
-- **Last session:** 2026-07-04 — scaffolded 16 stage folders, CURRICULUM.md, NOTES.md, AGENTS.md, Makefile, .gitignore; moved existing flask project into 00-existing-flask-baseline/; initial commit `e159796`.
+- **Last session:** 2026-07-04 — installed cloud-provider-kind v0.11.1, recreated kind cluster with native Ingress support, validated end-to-end with kind's ingress example. Updated 00-bootstrap README to reflect the new architecture (no ingress-nginx needed).
 
 > When you finish a session, update this section + append to "Session log" below.
 
@@ -25,13 +25,14 @@ plus `manifests/` and `src/` you run yourself.
 
 Append-only. One short entry per session: date, what you did, what's next.
 
-- **2026-07-04** — Scaffolded curriculum structure (16 stage folders + index + bootstrap). No k8s work yet. Next: run `make 00-bootstrap`.
+- **2026-07-04 (session 2)** — Executed stage 00-bootstrap. Fetched live kind docs: discovered kind v0.32 supports Ingress natively via cloud-provider-kind (host binary, not a pod). Installed v0.11.1 via `go install`. Recreated cluster. Updated README + removed obsolete ingress-nginx manifest. Next: stage 01.
+- **2026-07-04 (session 1)** — Scaffolded curriculum structure (16 stage folders + index + bootstrap). No k8s work yet. Next: run `make 00-bootstrap`.
 
 ---
 
 ## Progress
 
-- [ ] **00-bootstrap** — Cluster setup, ingress-nginx, common helpers, repo conventions
+- [x] **00-bootstrap** — Cluster setup, native Ingress via cloud-provider-kind (no ingress-nginx)
 - [x] **00-existing-flask-baseline** — Pre-curriculum snapshot (flask change-maker app + nginx deployment)
 - [ ] **01-k8s-fundamentals** — Pods, ReplicaSets, Deployments, Services, Labels, Selectors
 - [ ] **02-storage-config** — PV/PVC, StatefulSets, ConfigMaps, Secrets, init containers
@@ -77,11 +78,12 @@ Append-only. One short entry per session: date, what you did, what's next.
 
 ## Tooling
 
-- Cluster: kind single-node (current `kind-control-plane`)
-- Image loading: `kind load docker-image <name>`
+- Cluster: kind single-node (current `kind-control-plane`), v1.36.1
+- Image loading: `kind load docker-image <name>` (no registry)
 - Registry: local-only via kind; remote push not needed
-- Ingress: ingress-nginx installed in stage 00-bootstrap
-- MLflow: StatefulSet + 1Gi PVC + Service, port-forward for UI
+- Ingress: **native**, via cloud-provider-kind v0.11.1 (host binary, runs with sudo)
+- LoadBalancer services: also native via cloud-provider-kind
+- MLflow: StatefulSet + 1Gi PVC + Service, port-forward for UI or Ingress `mlflow.local`
 - KServe: heavy on single-node CPU; use lightweight FastAPI loader in stages, KServe manifests as theory
 - LLM serving: `vllm --device cpu` (Qwen2.5-0.5B) or `llama.cpp` GGUF as fallback
 - Pipeline orchestrator: Kubeflow Pipelines (priority), Argo Workflows (alternative)

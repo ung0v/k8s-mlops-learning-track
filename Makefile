@@ -10,9 +10,10 @@ help:
 
 .PHONY: 00-bootstrap
 00-bootstrap:
+	@echo "Checking cloud-provider-kind is running..."
+	@pgrep -f cloud-provider-kind >/dev/null || echo "WARNING: cloud-provider-kind not running. Start it in a separate terminal: sudo \$$(go env GOPATH)/bin/cloud-provider-kind --enable-default-ingress=true"
 	@kubectl get nodes
-	@kubectl apply -f 00-bootstrap/manifests/ingress-nginx.yaml
-	@kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
+	@echo "Cluster ready. See 00-bootstrap/README.md for the full setup including native ingress."
 
 .PHONY: 01-fundamentals
 01-fundamentals:

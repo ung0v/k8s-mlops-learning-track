@@ -30,3 +30,13 @@ kubectl run debug --rm -it --image=busybox -- sh
 ## Per-stage log
 
 (empty — fill as you go)
+
+## Stage 00 — Bootstrap
+
+- kind v0.32 supports Ingress natively via `cloud-provider-kind` (no ingress-nginx needed).
+- `cloud-provider-kind` is a **host binary** (not a pod); install with `go install sigs.k8s.io/cloud-provider-kind@v0.11.1`.
+- It must run with `sudo` (it opens host ports for LB containers). Run it in a dedicated terminal:
+  `sudo "$(go env GOPATH)/bin/cloud-provider-kind" --enable-default-ingress=true`
+- With cloud-provider-kind, Services of `type: LoadBalancer` and standard `Ingress` objects both work — kind spins up Docker containers that act as load balancers, assigns them an external IP, and routes host ports to them.
+- No `extraPortMappings` needed in kind-config.yaml anymore.
+- Cluster recreated 2026-07-04 with `00-bootstrap/manifests/kind-config.yaml` (single control-plane, `ingress-ready=true` label kept for compatibility with older guides).

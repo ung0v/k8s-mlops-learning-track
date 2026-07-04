@@ -44,9 +44,12 @@ Runtime: kind single-node cluster on a CPU-only Mac. Focus area: pipelines & orc
 
 ## Tooling (don't recompute — use these)
 
-- Cluster: kind single-node. Context: `kind-kind`. Existing node: `kind-control-plane`.
+- Cluster: kind single-node. Context: `kind-kind`. Existing node: `kind-control-plane` (v1.36.1).
 - Image loading: `kind load docker-image <name>:<tag>` (no registry).
-- Ingress: ingress-nginx, installed in stage 00-bootstrap.
+- Ingress: **native via cloud-provider-kind v0.11.1** (host binary, runs with `sudo`
+  in a dedicated terminal). NOT ingress-nginx. Start it each session:
+  `sudo "$(go env GOPATH)/bin/cloud-provider-kind" --enable-default-ingress=true`
+- LoadBalancer services: also native via cloud-provider-kind (external IP assigned automatically).
 - MLflow: StatefulSet + 1Gi PVC + Service, port-forward for UI (or Ingress `mlflow.local`).
 - KServe: too heavy for single-node CPU — use a lightweight FastAPI loader pattern instead;
   show KServe `InferenceService` manifests only as theory.
