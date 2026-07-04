@@ -71,8 +71,11 @@ Append-only. One short entry per session: date, what you did, what's next.
 ## Conventions
 
 - One stage per folder; never edit a completed stage (treat as journal entry).
-- Each stage's `README.md` covers: objectives, concepts, commands, expected output, "try next".
-- Manifests under `manifests/` are uncommented (per repo code style); explanations live in README.
+- Each stage has TWO docs:
+  - **`concepts.md`** — the "textbook chapter": definitions, mental models, why things exist,
+    diagrams-in-text, related official docs. Read this first.
+  - **`README.md`** — the "lab guide": objectives, commands, expected output, "try next". Run this after.
+- Manifests under `manifests/` are uncommented (per repo code style); explanations live in concepts.md.
 - `src/` holds minimal Python (FastAPI / sklearn / transformers) when the stage needs an app.
 - Commit once per stage; the git history doubles as a learning journal.
 
