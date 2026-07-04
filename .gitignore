@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Editor
+.vscode/
+.idea/
+
+# Local data / artifacts not meant for git
+data/
+artifacts/
+mlruns/
+*.pkl
+*.joblib
+*.gguf
+*.bin
+*.safetensors
+
+# Secrets — never commit
+*.secret.yaml
+*.secret.yml
+.env
+.env.*
+
+# MLflow local store
+mlflow.db
+mlartifacts/
