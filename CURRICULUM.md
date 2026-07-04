@@ -9,6 +9,26 @@ plus `manifests/` and `src/` you run yourself.
 
 ---
 
+## Current state  <-- READ THIS FIRST when resuming a session
+
+- **Active stage:** none yet (curriculum just scaffolded)
+- **Last completed:** 00-existing-flask-baseline (snapshot only, not a teaching stage)
+- **Next up:** 00-bootstrap — verify cluster, install ingress-nginx
+- **Blockers / open questions:** none
+- **Last session:** 2026-07-04 — scaffolded 16 stage folders, CURRICULUM.md, NOTES.md, AGENTS.md, Makefile, .gitignore; moved existing flask project into 00-existing-flask-baseline/; initial commit `e159796`.
+
+> When you finish a session, update this section + append to "Session log" below.
+
+---
+
+## Session log
+
+Append-only. One short entry per session: date, what you did, what's next.
+
+- **2026-07-04** — Scaffolded curriculum structure (16 stage folders + index + bootstrap). No k8s work yet. Next: run `make 00-bootstrap`.
+
+---
+
 ## Progress
 
 - [ ] **00-bootstrap** — Cluster setup, ingress-nginx, common helpers, repo conventions
@@ -69,3 +89,11 @@ plus `manifests/` and `src/` you run yourself.
 ## Notes
 
 See `NOTES.md` for running gotchas, command snippets, and per-stage observations.
+
+## How to resume a session
+
+1. Read **"Current state"** at the top of this file — that's the single source of truth for where we are.
+2. Read the active stage's `README.md` for objectives and commands.
+3. Skim `NOTES.md` for recent gotchas.
+4. Check `git log --oneline -10` for what was committed last.
+5. When ending a session, update "Current state" + "Session log" and commit.
