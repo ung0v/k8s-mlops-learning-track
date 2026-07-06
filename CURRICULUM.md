@@ -11,11 +11,11 @@ plus `manifests/` and `src/` you run yourself.
 
 ## Current state  <-- READ THIS FIRST when resuming a session
 
-- **Active stage:** none yet (curriculum just scaffolded)
-- **Last completed:** 00-existing-flask-baseline (snapshot only, not a teaching stage)
-- **Next up:** 01-k8s-fundamentals — Pods, ReplicaSets, Deployments, Services, Labels (bootstrap done)
+- **Active stage:** none (stage 01 content written + verified; user runs the lab next)
+- **Last completed:** 00-bootstrap
+- **Next up:** 01-k8s-fundamentals — user reads concepts.md (or concepts.vi.md), then runs the README.md lab (Pod → Deployment + rollout/rollback → Service + DNS → label-mismatch demo → cleanup). After lab, mark stage 01 done.
 - **Blockers / open questions:** none
-- **Last session:** 2026-07-04 — installed cloud-provider-kind v0.11.1, recreated kind cluster with native Ingress support, validated end-to-end with kind's ingress example. Updated 00-bootstrap README to reflect the new architecture (no ingress-nginx needed).
+- **Last session:** 2026-07-04 — wrote stage 01 concepts.md + concepts.vi.md + README.md (lab) + 3 manifests (pod/deployment/service). Fetched live k8s.io docs (Pod v1, Deployment apps/v1, Service v1 — all stable on v1.36). Verified all manifests end-to-end on the live cluster: Pod reachable, Deployment 3 replicas + rollout to nginx:1.28 + rollback to nginx:1.27, Service ClusterIP + DNS `nginx-svc.default.svc.cluster.local` resolves + curl returns nginx welcome page, self-healing (deleted Pod recreated in ~3s).
 
 > When you finish a session, update this section + append to "Session log" below.
 
@@ -25,6 +25,7 @@ plus `manifests/` and `src/` you run yourself.
 
 Append-only. One short entry per session: date, what you did, what's next.
 
+- **2026-07-04 (session 3)** — Wrote stage 01 content: concepts.md (Pod/Deployment/ReplicaSet/Service/Labels mental models + the full apply→curl chain in §7), concepts.vi.md (Vietnamese translation), README.md (lab: create Pod → Deployment + scale + rollout + rollback → Service + DNS + endpoints → label-mismatch demo → cleanup), and 3 manifests (pod.yaml, deployment.yaml, service.yaml). Fetched live k8s.io docs to confirm API versions (Pod v1, Deployment apps/v1, Service v1 — all stable on v1.36). Verified end-to-end on the live cluster: Pod reachable via debug pod, Deployment 3 replicas + rolled nginx:1.27→1.28 (two ReplicaSets, old scaled to 0) + rolled back, Service got ClusterIP + 3 endpoints + DNS `nginx-svc.default.svc.cluster.local` resolves + curl returns welcome page, self-healing demo (deleted Pod recreated in ~3s). Next: user runs the lab, then we move to stage 02.
 - **2026-07-04 (session 2)** — Executed stage 00-bootstrap. Fetched live kind docs: discovered kind v0.32 supports Ingress natively via cloud-provider-kind (host binary, not a pod). Installed v0.11.1 via `go install`. Recreated cluster. Updated README + removed obsolete ingress-nginx manifest. Next: stage 01.
 - **2026-07-04 (session 1)** — Scaffolded curriculum structure (16 stage folders + index + bootstrap). No k8s work yet. Next: run `make 00-bootstrap`.
 
@@ -34,7 +35,7 @@ Append-only. One short entry per session: date, what you did, what's next.
 
 - [x] **00-bootstrap** — Cluster setup, native Ingress via cloud-provider-kind (no ingress-nginx)
 - [x] **00-existing-flask-baseline** — Pre-curriculum snapshot (flask change-maker app + nginx deployment)
-- [ ] **01-k8s-fundamentals** — Pods, ReplicaSets, Deployments, Services, Labels, Selectors
+- [x] **01-k8s-fundamentals** — Pods, ReplicaSets, Deployments, Services, Labels, Selectors (content written + verified; user runs the lab next)
 - [ ] **02-storage-config** — PV/PVC, StatefulSets, ConfigMaps, Secrets, init containers
 - [ ] **03-packaging-ml-apps** — Multi-stage Docker, slim ML images, `kind load docker-image`
 - [ ] **04-batch-ml-jobs** — Job, CronJob, parallelism; run sklearn training as a Job, artifact to PVC
