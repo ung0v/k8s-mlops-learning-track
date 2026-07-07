@@ -49,3 +49,19 @@ kubectl run debug --rm -it --image=busybox -- sh
 - Headless Service (`clusterIP: None`) + StatefulSet gives each Pod a stable DNS name: `web-0.web-svc.default.svc.cluster.local`. Only resolvable from inside the cluster (use a debug Pod).
 - StatefulSet Pods are created sequentially (web-0 → web-1 → web-2) and deleted in reverse. PVCs are retained on scale-down (not deleted), so scaling back up reattaches the same data.
 - Init containers run to completion before the main container starts. Status shows as `Init:0/1` (0 of 1 init containers completed).
+
+## Stage 05 — Serving + HPA
+
+- metrics-server manifest needs: (1) no `--kubelet-use-node-status` flag (not valid in v0.7.2), (2) `list,watch` on configmaps (not just `get`), (3) an `APIService` resource (`v1beta1.metrics.k8s.io`) pointing to the metrics-server Service. Without the APIService, `kubectl top` returns "Metrics API not available" even though the pod is Running.
+- `kubectl top nodes` takes ~30-60s after metrics-server starts before it returns data.
+- HPA shows `cpu: <unknown>/70%` until metrics-server is fully registered; then shows real CPU%.
+- Serving Pod with `readOnly: true` PVC mount + `runAsUser: 1000` works on kind's local-path StorageClass (dir is mode 0777).
+- Ingress with `host: serve.local` works via cloud-provider-kind — add the Ingress IP to `/etc/hosts` to curl by name, or use `-H "Host: serve.local"` with the IP directly.
+
+## Stage 04 — Jobs
+
+- Job `restartPolicy` must be `OnFailure` or `Never` (not `Always` — that's for Deployments).
+- `kubectl wait --for=condition=Complete job/<name>` is the right way to wait for a Job.
+- CronJob `*/2 * * * *` schedules at even minute boundaries (00, 02, 04...), not "2 minutes after apply". First scheduled run can take up to 2 min.
+- `concurrencyPolicy: Forbid` prevents overlapping Jobs — important for training (prevents two Jobs writing to the same model file).
+- Job Pod shows `STATUS: Completed` (not `Running`) — this is the key visual difference from a Deployment Pod.

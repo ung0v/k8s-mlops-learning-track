@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: iris-train
+  labels:
+    app: iris-train
+spec:
+  backoffLimit: 4
+  activeDeadlineSeconds: 300
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: iris-train
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: train
+        image: iris-train:0.1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: N_ESTIMATORS
+          value: "20"
+        - name: MAX_DEPTH
+          value: "3"
+        - name: MODEL_PATH
+          value: /data/model.joblib
+        - name: METRICS_PATH
+          value: /data/metrics.json
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: model-pvc

@@ -11,11 +11,11 @@ plus `manifests/` and `src/` you run yourself.
 
 ## Current state  <-- READ THIS FIRST when resuming a session
 
-- **Active stage:** none (stage 02 content written + verified; user runs the lab next)
-- **Last completed:** 01-k8s-fundamentals
-- **Next up:** 02-storage-config — user reads concepts.md (or concepts.vi.md), then runs the README.md lab (ConfigMap/Secret injection → PVC persistence → StatefulSet with stable identity + headless DNS → init container → cleanup).
+- **Active stage:** none (stages 03/04/05 content written + verified; user runs the labs)
+- **Last completed:** 02-storage-config
+- **Next up:** 03-packaging-ml-apps → 04-batch-ml-jobs → 05-serving-single-model (run in order; they form a continuous MLOps arc: build image → train as Job → serve as Deployment)
 - **Blockers / open questions:** none
-- **Last session:** 2026-07-07 — wrote stage 02 concepts.md + concepts.vi.md + README.md (lab) + 8 manifests (configmap, secret, config-secret-pod, pvc, pvc-pod, headless-service, statefulset, init-pod, init-service). Fetched live k8s.io docs (PV/PVC v1, StatefulSet apps/v1, ConfigMap v1, Secret v1 — all stable on v1.36). Discovered kind's default StorageClass is named `standard` (not `local-path`); fixed manifests to omit storageClassName. Verified end-to-end: ConfigMap+Secret injection (env + volume), PVC persistence across Pod deletion, StatefulSet ordered creation (web-0→1→2) + per-Pod PVCs + headless DNS (web-0.web-svc resolves) + self-healing with stable identity (deleted web-1, came back with same name + data), init container wrote index.html served by nginx.
+- **Last session:** 2026-07-07 — wrote stages 03/04/05: concepts.md + concepts.vi.md + README.md (labs) + src (train.py, app.py, Dockerfiles) + 10 manifests. Fetched live k8s.io docs (Job/CronJob batch/v1, HPA autoscaling/v2, Ingress networking.k8s.io/v1, probes — all stable on v1.36). Built iris-train:0.1 (409MB) and iris-serve:0.1 (422MB) multi-stage images, loaded into kind. Verified end-to-end: training Job Complete 1/1 (accuracy 1.0, model on PVC), CronJob scheduled every 2 min (iris-retrain-29724048 + 29724050 ran), serving Deployment 2/2 Ready with readiness probe → 2 endpoints, /predict returns setosa/virginica correctly, Ingress serve.local → 192.168.97.3 → /predict works, metrics-server + APIService + HPA shows cpu 5%/70%. Fixed metrics-server manifest (removed invalid --kubelet-use-node-status flag, added list/watch for configmaps, added APIService registration).
 
 > When you finish a session, update this section + append to "Session log" below.
 
@@ -38,9 +38,9 @@ Append-only. One short entry per session: date, what you did, what's next.
 - [x] **00-existing-flask-baseline** — Pre-curriculum snapshot (flask change-maker app + nginx deployment)
 - [x] **01-k8s-fundamentals** — Pods, ReplicaSets, Deployments, Services, Labels, Selectors (content written + verified; user runs the lab next)
 - [x] **02-storage-config** — PV/PVC, StatefulSets, ConfigMaps, Secrets, init containers (content written + verified; user runs the lab next)
-- [ ] **03-packaging-ml-apps** — Multi-stage Docker, slim ML images, `kind load docker-image`
-- [ ] **04-batch-ml-jobs** — Job, CronJob, parallelism; run sklearn training as a Job, artifact to PVC
-- [ ] **05-serving-single-model** — Deployment+Service+HPA, liveness/readiness, serve FastAPI sklearn model
+- [x] **03-packaging-ml-apps** — Multi-stage Docker, slim ML images, `kind load docker-image` (content written + verified; user runs the lab)
+- [ ] **04-batch-ml-jobs** — Job, CronJob, parallelism; run sklearn training as a Job, artifact to PVC (content written + verified; user runs the lab)
+- [ ] **05-serving-single-model** — Deployment+Service+HPA, liveness/readiness, serve FastAPI sklearn model (content written + verified; user runs the lab)
 - [ ] **06-gitops-argocd** — Argo CD intro, declarative deploy of the serving app, sync waves
 - [ ] **07-kubeflow-pipelines** — KFP standalone on kind, SDK v2 pipeline, train→eval→export, UI
 - [ ] **08-argo-workflows** — Argo Workflows (lighter alternative), DAG/step templates, artifact passing

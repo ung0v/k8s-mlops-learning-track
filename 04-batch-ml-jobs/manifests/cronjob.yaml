@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: iris-retrain
+  labels:
+    app: iris-train
+spec:
+  schedule: "*/2 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: train
+            image: iris-train:0.1
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: N_ESTIMATORS
+              value: "30"
+            - name: MAX_DEPTH
+              value: "4"
+            - name: MODEL_PATH
+              value: /data/model.joblib
+            - name: METRICS_PATH
+              value: /data/metrics.json
+            volumeMounts:
+            - name: data
+              mountPath: /data
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: model-pvc
