@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: init-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: init-demo
+  ports:
+  - port: 80
+    targetPort: 80

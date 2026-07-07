@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  log_level: "info"
+  greeting: "hello from configmap"
+  app.properties: |
+    color.good=purple
+    color.bad=yellow
+    allow.textmode=true

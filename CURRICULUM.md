@@ -11,11 +11,11 @@ plus `manifests/` and `src/` you run yourself.
 
 ## Current state  <-- READ THIS FIRST when resuming a session
 
-- **Active stage:** none (stage 01 content written + verified; user runs the lab next)
-- **Last completed:** 00-bootstrap
-- **Next up:** 01-k8s-fundamentals — user reads concepts.md (or concepts.vi.md), then runs the README.md lab (Pod → Deployment + rollout/rollback → Service + DNS → label-mismatch demo → cleanup). After lab, mark stage 01 done.
+- **Active stage:** none (stage 02 content written + verified; user runs the lab next)
+- **Last completed:** 01-k8s-fundamentals
+- **Next up:** 02-storage-config — user reads concepts.md (or concepts.vi.md), then runs the README.md lab (ConfigMap/Secret injection → PVC persistence → StatefulSet with stable identity + headless DNS → init container → cleanup).
 - **Blockers / open questions:** none
-- **Last session:** 2026-07-04 — wrote stage 01 concepts.md + concepts.vi.md + README.md (lab) + 3 manifests (pod/deployment/service). Fetched live k8s.io docs (Pod v1, Deployment apps/v1, Service v1 — all stable on v1.36). Verified all manifests end-to-end on the live cluster: Pod reachable, Deployment 3 replicas + rollout to nginx:1.28 + rollback to nginx:1.27, Service ClusterIP + DNS `nginx-svc.default.svc.cluster.local` resolves + curl returns nginx welcome page, self-healing (deleted Pod recreated in ~3s).
+- **Last session:** 2026-07-07 — wrote stage 02 concepts.md + concepts.vi.md + README.md (lab) + 8 manifests (configmap, secret, config-secret-pod, pvc, pvc-pod, headless-service, statefulset, init-pod, init-service). Fetched live k8s.io docs (PV/PVC v1, StatefulSet apps/v1, ConfigMap v1, Secret v1 — all stable on v1.36). Discovered kind's default StorageClass is named `standard` (not `local-path`); fixed manifests to omit storageClassName. Verified end-to-end: ConfigMap+Secret injection (env + volume), PVC persistence across Pod deletion, StatefulSet ordered creation (web-0→1→2) + per-Pod PVCs + headless DNS (web-0.web-svc resolves) + self-healing with stable identity (deleted web-1, came back with same name + data), init container wrote index.html served by nginx.
 
 > When you finish a session, update this section + append to "Session log" below.
 
@@ -25,7 +25,8 @@ plus `manifests/` and `src/` you run yourself.
 
 Append-only. One short entry per session: date, what you did, what's next.
 
-- **2026-07-04 (session 3)** — Wrote stage 01 content: concepts.md (Pod/Deployment/ReplicaSet/Service/Labels mental models + the full apply→curl chain in §7), concepts.vi.md (Vietnamese translation), README.md (lab: create Pod → Deployment + scale + rollout + rollback → Service + DNS + endpoints → label-mismatch demo → cleanup), and 3 manifests (pod.yaml, deployment.yaml, service.yaml). Fetched live k8s.io docs to confirm API versions (Pod v1, Deployment apps/v1, Service v1 — all stable on v1.36). Verified end-to-end on the live cluster: Pod reachable via debug pod, Deployment 3 replicas + rolled nginx:1.27→1.28 (two ReplicaSets, old scaled to 0) + rolled back, Service got ClusterIP + 3 endpoints + DNS `nginx-svc.default.svc.cluster.local` resolves + curl returns welcome page, self-healing demo (deleted Pod recreated in ~3s). Next: user runs the lab, then we move to stage 02.
+- **2026-07-07 (session 4)** — Wrote stage 02 content: concepts.md (Volumes vs PersistentVolumes, PV/PVC/StorageClass, ConfigMap 3 injection methods, Secret vs ConfigMap, StatefulSet vs Deployment table, headless Service, init containers, the full apply→PVC→Pod→volume chain in §7), concepts.vi.md (Vietnamese), README.md (lab: ConfigMap+Secret env+volume injection → PVC write+delete-pod+verify-persist → StatefulSet ordered creation + per-Pod PVCs + headless DNS + self-healing with stable identity + scale down + retained PVCs → init container writes index.html served by nginx → cleanup), 8 manifests. Fetched live k8s.io docs (all APIs stable on v1.36). Discovered kind's default StorageClass is `standard` not `local-path`; fixed manifests. Verified all end-to-end on live cluster. Next: user runs the lab, then stage 03.
+- **2026-07-04 (session 3)** — Wrote stage 01 content: concepts.md (Pod/Deployment/ReplicaSet/Service/Labels mental models + the full apply→curl chain in §7), concepts.vi.md (Vietnamese translation), README.md (lab: create Pod → Deployment + scale + rollout + rollback → Service + DNS + endpoints → label-mismatch demo → cleanup), and 3 manifests (pod.yaml, deployment.yaml, service.yaml). Fetched live k8s.io docs to confirm API versions (Pod v1, Deployment apps/v1, Service v1 — all stable on v1.36). Verified end-to-end on the live cluster. Next: user runs the lab, then we move to stage 02.
 - **2026-07-04 (session 2)** — Executed stage 00-bootstrap. Fetched live kind docs: discovered kind v0.32 supports Ingress natively via cloud-provider-kind (host binary, not a pod). Installed v0.11.1 via `go install`. Recreated cluster. Updated README + removed obsolete ingress-nginx manifest. Next: stage 01.
 - **2026-07-04 (session 1)** — Scaffolded curriculum structure (16 stage folders + index + bootstrap). No k8s work yet. Next: run `make 00-bootstrap`.
 
@@ -36,7 +37,7 @@ Append-only. One short entry per session: date, what you did, what's next.
 - [x] **00-bootstrap** — Cluster setup, native Ingress via cloud-provider-kind (no ingress-nginx)
 - [x] **00-existing-flask-baseline** — Pre-curriculum snapshot (flask change-maker app + nginx deployment)
 - [x] **01-k8s-fundamentals** — Pods, ReplicaSets, Deployments, Services, Labels, Selectors (content written + verified; user runs the lab next)
-- [ ] **02-storage-config** — PV/PVC, StatefulSets, ConfigMaps, Secrets, init containers
+- [x] **02-storage-config** — PV/PVC, StatefulSets, ConfigMaps, Secrets, init containers (content written + verified; user runs the lab next)
 - [ ] **03-packaging-ml-apps** — Multi-stage Docker, slim ML images, `kind load docker-image`
 - [ ] **04-batch-ml-jobs** — Job, CronJob, parallelism; run sklearn training as a Job, artifact to PVC
 - [ ] **05-serving-single-model** — Deployment+Service+HPA, liveness/readiness, serve FastAPI sklearn model
