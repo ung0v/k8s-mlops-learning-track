@@ -11,11 +11,11 @@ plus `manifests/` and `src/` you run yourself.
 
 ## Current state  <-- READ THIS FIRST when resuming a session
 
-- **Active stage:** none (stages 03/04/05 content written + verified; user runs the labs)
-- **Last completed:** 02-storage-config
-- **Next up:** 03-packaging-ml-apps → 04-batch-ml-jobs → 05-serving-single-model (run in order; they form a continuous MLOps arc: build image → train as Job → serve as Deployment)
-- **Blockers / open questions:** none
-- **Last session:** 2026-07-07 — wrote stages 03/04/05: concepts.md + concepts.vi.md + README.md (labs) + src (train.py, app.py, Dockerfiles) + 10 manifests. Fetched live k8s.io docs (Job/CronJob batch/v1, HPA autoscaling/v2, Ingress networking.k8s.io/v1, probes — all stable on v1.36). Built iris-train:0.1 (409MB) and iris-serve:0.1 (422MB) multi-stage images, loaded into kind. Verified end-to-end: training Job Complete 1/1 (accuracy 1.0, model on PVC), CronJob scheduled every 2 min (iris-retrain-29724048 + 29724050 ran), serving Deployment 2/2 Ready with readiness probe → 2 endpoints, /predict returns setosa/virginica correctly, Ingress serve.local → 192.168.97.3 → /predict works, metrics-server + APIService + HPA shows cpu 5%/70%. Fixed metrics-server manifest (removed invalid --kubelet-use-node-status flag, added list/watch for configmaps, added APIService registration).
+- **Active stage:** none (stages 06/07/08 content written; stage 06 verified live, 07/08 written + ready to run)
+- **Last completed:** 05-serving-single-model
+- **Next up:** 06-gitops-argocd → 07-kubeflow-pipelines → 08-argo-workflows (the pipeline/orchestration stages — your focus area. Run in order: GitOps first, then KFP (primary), then Argo Workflows (comparison))
+- **Blockers / open questions:** KFP (07) needs ~4 GiB RAM — may need to increase Docker Desktop memory to 8 GiB before running stage 07.
+- **Last session:** 2026-07-08 — wrote stages 06/07/08: concepts.md + concepts.vi.md + README.md (labs) + manifests + src (pipeline.py). Stage 06 (Argo CD) verified end-to-end on live cluster: installed Argo CD, created guestbook Application from public repo, synced successfully, tested self-healing (kubectl scale to 3 → Argo CD reverted to 1 within 30s). Hit NetworkPolicy issue on kind (argocd-application-controller couldn't reach argocd-redis) — fixed by deleting NetworkPolicies. Stages 07 (KFP) and 08 (Argo Workflows) written but not yet verified live (KFP install is heavy, ~3 min + 4 GiB RAM).
 
 > When you finish a session, update this section + append to "Session log" below.
 
@@ -41,9 +41,9 @@ Append-only. One short entry per session: date, what you did, what's next.
 - [x] **03-packaging-ml-apps** — Multi-stage Docker, slim ML images, `kind load docker-image` (content written + verified; user runs the lab)
 - [ ] **04-batch-ml-jobs** — Job, CronJob, parallelism; run sklearn training as a Job, artifact to PVC (content written + verified; user runs the lab)
 - [ ] **05-serving-single-model** — Deployment+Service+HPA, liveness/readiness, serve FastAPI sklearn model (content written + verified; user runs the lab)
-- [ ] **06-gitops-argocd** — Argo CD intro, declarative deploy of the serving app, sync waves
-- [ ] **07-kubeflow-pipelines** — KFP standalone on kind, SDK v2 pipeline, train→eval→export, UI
-- [ ] **08-argo-workflows** — Argo Workflows (lighter alternative), DAG/step templates, artifact passing
+- [x] **06-gitops-argocd** — Argo CD intro, declarative deploy of the serving app, sync waves (content written + verified live; user runs the lab)
+- [x] **07-kubeflow-pipelines** — KFP standalone on kind, SDK v2 pipeline, train→eval→export, UI (content written; user runs the lab — needs ~4 GiB RAM)
+- [x] **08-argo-workflows** — Argo Workflows (lighter alternative), DAG/step templates, artifact passing (content written; user runs the lab)
 - [ ] **09-mlflow-tracking** — MLflow server on k8s (StatefulSet+PVC+Service), log from Jobs, port-forward UI
 - [ ] **10-model-registry-serving** — MLflow Model Registry, promote versions, load by alias from FastAPI/KServe
 - [ ] **11-feature-store-intro** — Feast minimal on kind (theory-heavy)

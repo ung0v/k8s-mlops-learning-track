@@ -65,3 +65,25 @@ kubectl run debug --rm -it --image=busybox -- sh
 - CronJob `*/2 * * * *` schedules at even minute boundaries (00, 02, 04...), not "2 minutes after apply". First scheduled run can take up to 2 min.
 - `concurrencyPolicy: Forbid` prevents overlapping Jobs — important for training (prevents two Jobs writing to the same model file).
 - Job Pod shows `STATUS: Completed` (not `Running`) — this is the key visual difference from a Deployment Pod.
+
+## Stage 06 — GitOps / Argo CD
+
+- Argo CD install manifest is huge (~33k lines). Download it first with `curl` to avoid GitHub rate limits on `raw.githubusercontent.com`.
+- The ApplicationSet CRD may show "metadata.annotations: Too long" — this is a cosmetic warning; the install still succeeds.
+- Argo CD installs NetworkPolicies that can block pod-to-pod traffic on kind's simple CNI (kindnet). If `argocd-application-controller` can't reach `argocd-redis` (DNS timeout), delete the NetworkPolicies: `kubectl delete networkpolicy -n argocd --all`. Then restart the application controller: `kubectl delete pod -n argocd argocd-application-controller-0`.
+- `file://` repoURL doesn't work on kind — the repo-server Pod is inside the kind container and can't see your Mac's filesystem. Use a public GitHub repo (e.g. `argoproj/argocd-example-apps`) or push your repo to GitHub.
+- `spec.project: default` is required on the Application manifest (or the API rejects it).
+- Self-heal runs on ~30s intervals. `kubectl scale` → Argo CD detects drift → reverts within 30s.
+
+## Stage 07 — KFP (planned, not yet verified live)
+
+- KFP v2 latest is `2.16.1`. Install via kustomize: `kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/dev?ref=2.16.1"`.
+- UI via port-forward: `kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80`.
+- KFP needs ~4 GiB RAM. If kind node is OOM-killed, increase Docker Desktop memory to 8 GiB.
+- KFP uses Argo Workflows under the hood — the `workflow-controller` pod in `kubeflow` namespace is the same binary as stage 08's.
+
+## Stage 08 — Argo Workflows (planned, not yet verified live)
+
+- Argo Workflows `quick-start-minimal.yaml` is truly minimal — only 2 pods (argo-server + workflow-controller). Much lighter than KFP.
+- UI on port 2746 (https, not http) — accept the self-signed cert.
+- Install: `kubectl apply -n argo -f https://github.com/argoproj/argo-workflows/releases/download/v3.6.4/quick-start-minimal.yaml`.

@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: iris-pipeline-
+  labels:
+    app: iris-pipeline
+spec:
+  entrypoint: main
+  arguments:
+    parameters:
+    - name: n_estimators
+      value: "20"
+  templates:
+  - name: main
+    dag:
+      tasks:
+      - name: train
+        template: train
+        arguments:
+          parameters:
+          - name: n_estimators
+            value: "{{workflow.parameters.n_estimators}}"
+      - name: eval
+        template: eval
+        dependencies: [train]
+      - name: export
+        template: export
+        dependencies: [eval]
+        arguments:
+          parameters:
+          - name: accuracy
+            value: "{{tasks.eval.outputs.result}}"
+
+  - name: train
+    inputs:
+      parameters:
+      - name: n_estimators
+    container:
+      image: iris-train:0.1
+      imagePullPolicy: IfNotPresent
+      command: ["python", "train.py"]
+      env:
+      - name: N_ESTIMATORS
+        value: "{{inputs.parameters.n_estimators}}"
+      - name: MODEL_PATH
+        value: /tmp/model.joblib
+      - name: METRICS_PATH
+        value: /tmp/metrics.json
+      outputs:
+      - name: model
+        path: /tmp/model.joblib
+      - name: metrics
+        path: /tmp/metrics.json
+
+  - name: eval
+    inputs:
+      artifacts:
+      - name: model
+        path: /tmp/model.joblib
+    container:
+      image: python:3.12-slim
+      command: ["python", "-c"]
+      args:
+      - |
+        import joblib, json
+        from sklearn.metrics import accuracy_score
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        clf = joblib.load("/tmp/model.joblib")
+        X, y = load_iris(return_X_y=True)
+        _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        acc = accuracy_score(y_test, clf.predict(X_test))
+        print(f"Accuracy: {acc}")
+        print(acc)
+
+  - name: export
+    inputs:
+      parameters:
+      - name: accuracy
+      artifacts:
+      - name: model
+        path: /tmp/model.joblib
+    container:
+      image: python:3.12-slim
+      command: ["python", "-c"]
+      args:
+      - |
+        print(f"Exporting model with accuracy: {{inputs.parameters.accuracy}}")
+        print("Model ready for serving")
